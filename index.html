@@ -1,0 +1,1010 @@
+<!doctype html>
+<html lang="hu">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Neon MP3 Lejátszó – Mappák, Állapot, TeKerés</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Vollkorn:ital,wght@0,400..900;1,400..900&display=swap');
+
+    :root {
+      --bg: #0a0f16;
+      --panel: #1c2a3a;
+      --accent: #00bfff;
+      --accent2: #63f588;
+      --accent3: #c2f563;
+      --accent4: #0B1926;
+      --accent5: #0B1926;      
+      --text: #e3f2ff;
+    }
+
+    body {
+      background: radial-gradient(circle at top, #0c1520, #0f1a27);
+      font-family: "Inter", sans-serif;
+      color: var(--text);
+      margin: 0;
+      height: 100vh;
+      /* teljes képernyőre fixálva */
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      
+      /* ne csússzon el a layout */
+    }
+
+
+    header {
+      text-align: center;
+      padding: 8px;
+      font-family: "Vollkorn", sans-serif;
+      font-size: 22px;
+      letter-spacing: 1px;
+      color: var(--accent);
+      text-shadow: 0 0 10px var(--accent);
+      border-bottom: 1px solid rgba(0, 255, 255, 0.1);
+    }
+
+    main {
+      flex: 1;
+      display: grid;
+      grid-template-columns: 550px 1fr;
+      gap: 20px;
+      padding: 5px;
+      overflow: hidden;
+      /* a belső tartalomra korlátozva */
+    }
+
+    aside {
+      background: linear-gradient(180deg,  #131b25, #0d131b);
+      border-radius: 12px;
+      padding: 5px;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      /* fix magasság a grid cellán belül */
+      overflow: hidden;
+    }
+
+    #folderList {
+      flex: 1;
+      overflow-y: auto;
+      /* görgethető mappalista */
+      scrollbar-width: thin;
+      scrollbar-color: var(--accent) #0c121a;
+    }
+
+    #folderList::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    #folderList::-webkit-scrollbar-thumb {
+      background: var(--accent);
+      border-radius: 4px;
+    }
+
+    #folderList::-webkit-scrollbar-track {
+      background: #0c121a;
+    }
+
+
+    h2 {
+      font-family: "Orbitron", sans-serif;
+      font-size: 15px;
+      margin: 0 0 8px 0;
+      color: var(--accent);
+    }
+
+    ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    li.folder {
+      margin-bottom: 10px;
+    }
+
+    .folder-name {
+      padding: 6px 8px;
+      background: rgba(0, 255, 255, 0.05);
+      border-left: 3px solid var(--accent);
+      border-radius: 6px;
+      margin-bottom: 4px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-family: "Vollkorn", sans-serif;
+    }
+
+    .folder-name span {
+      font-size: 13px;
+      color: #7ea4bb;
+
+    }
+
+    .folder-name .arrow {
+      transition: transform 0.2s;
+      margin-right: 6px;
+      font-size: 12px;
+      color: var(--accent);
+    }
+
+    .folder.collapsed .arrow {
+      transform: rotate(-90deg);
+    }
+
+    .folder ul {
+      margin-left: 10px;
+      transition: max-height 0.3s ease;
+      overflow: hidden;
+
+    }
+
+    .folder.collapsed ul {
+      max-height: 0;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    li.track {
+      padding: 6px 10px;
+      color: #9db7cc;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background 0.2s;
+      font-size: 16px;
+      font-style: normal;
+    }
+
+    li.track:hover {
+      background: rgba(0, 255, 255, 0.07);
+      color: #fff;
+    }
+
+    li.track.playing {
+      /*background: linear-gradient(90deg, var(--accent2), transparent);*/
+      background-image: linear-gradient(to bottom, #6081b1, #5a7baa, #5475a2, #4f709b, #496a94);
+      color: #000;
+      font-weight: 600;
+      /*box-shadow: 0 0 8px var(--accent3);*/
+    }
+
+    .player {
+      background: linear-gradient(145deg, #0e1621, #091019);
+      font-family: "Vollkorn", sans-serif;
+      border-radius: 16px;
+      padding: 8px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      /*box-shadow: 0 0 20px rgba(0, 255, 255, 0.1);*/
+      overflow: hidden;
+      height: 100%;
+      /* a player mindig a képernyőhöz igazodik */
+      position: relative;
+    }
+
+    .top {
+      display: flex;
+      gap: 2px;
+      align-items: center;
+    }
+
+    .art {
+      width: auto;
+      height: auto;
+      /*background: radial-gradient(circle at top, #0a0f16, #0a0f16);*/
+      border: #16212c 2px solid;
+      border-radius: 8px;
+      margin-top: 10px;
+      margin-bottom: 5px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 30px;
+      padding: 30px;
+      color: var(--accent);
+      font-size: 18px;
+    
+      
+      /*box-shadow: inset 0 0 20px rgba(6, 65, 121, 0.349);*/
+    }
+
+    /* Hanyjegy stílusok */
+    .music-note {
+      font-size: 64px;
+      text-shadow: 0 0 5px var(--accent);
+      transition: all 0.1s ease;
+      display: inline-block;
+      will-change: transform; /* GPU gyorsítás */
+    }
+
+    .meta h3 {
+      margin: 0;
+      font-size: 20px;
+      color: #fff;
+    }
+
+    .meta p {
+      margin: 4px 0 0 0;
+      color: #9ab8cc;
+    }
+
+    .controls {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 4px;
+      flex-wrap: wrap;
+    }
+
+    button {
+      background: none;
+      border: 1px solid rgba(0, 255, 255, 0.2);
+      color: var(--accent);
+      padding: 6px 10px;
+      border-radius: 8px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.25s;
+      box-shadow: 0 0 5px rgba(0, 255, 255, 0.2);
+    }
+
+    .ikon {
+      /*color: var(--accent2);*/
+      color: transparent;
+      text-shadow: 0 0 0 var(--accent3);
+    }
+
+    button:hover {
+      background: var(--accent);
+      color: #34c975;
+      box-shadow: 0 0 15px var(--accent);
+    }
+
+    button.active {
+      /*background: #00ff88;*/
+      color: #2fc376;
+      font-weight: bold;
+    }
+
+    .refresh-btn {
+      width: 100%;
+      margin-bottom: 8px;
+    }
+
+    input[type=range] {
+      accent-color: var(--accent);
+      width: 120px;
+    }
+
+    .bar {
+      height: 6px;
+      background: #102030;
+      border-radius: 3px;
+      overflow: hidden;
+      margin: 10px 0;
+    }
+
+    .progress {
+      width: 0%;
+      height: 100%;
+      /*background: linear-gradient(90deg, #00bfff, #00ff88);*/
+      background: linear-gradient(90deg,  #8c2040, #FFEECB, var(--accent));
+      
+      transition: width 0.15s linear;
+    }
+
+    .time {
+      display: flex;
+      justify-content: space-between;
+      font-size: 22px;
+      color: linear-gradient(180deg,#FFEECB, var(--accent));
+    }
+
+    .vu {
+      display: flex;
+      justify-content: center;
+      align-items: flex-end;
+      gap: 3px;
+      height: 100px;
+      background: rgba(10, 20, 30, 0.3);
+      border-radius: 8px;
+      padding: 8px;
+      margin-top: 10px;
+    }
+
+    .vu-bar {
+      width: 16px;
+      min-height: 2px;
+      background: linear-gradient(180deg, var(--accent), #FFEECB, #8c2040); /* Statikus gradient */
+      border-radius: 3px;
+      transition: height 0.05s;
+      will-change: height, box-shadow; /* GPU gyorsítás */
+    }
+
+    footer {
+      text-align: center;
+      padding: 8px;
+      font-size: 11px;
+      color: rgba(255, 255, 255, 0.2);
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+    }
+  </style>
+</head>
+
+<body>
+  <header>⭐⭐⭐</header>
+  <main>
+    <aside>
+      <h2>📁 MP3 mappák</h2>
+      <button class="refresh-btn" id="refresh" hidden>🔄 Frissítés</button>
+      <div id="folderList"></div>
+    </aside>
+    <section class="player">
+      <div class="top">
+        <div style="flex:1">
+          <div class="meta">
+            <h3 id="title">Nincs betöltve</h3>
+            <p id="folder"></p>
+          </div>
+          <div class="controls">
+            <button id="prev"><span class="ikon">⏮</span> Előző</button>
+            <button id="play"><span class="ikon">➤</span></button>
+            <button id="next"><span class="ikon">⏭</span> Következő</button>
+            <label>🔊 <input type="range" id="vol" min="0" max="1" step="0.01" value="1"></label>
+            <button class="skip" data-sec="-30"><span class="ikon">🔙</span> -30s</button>
+            <button class="skip" data-sec="-20"><span class="ikon">🔙</span> -20s</button>
+            <button class="skip" data-sec="-10"><span class="ikon">🔙</span> -10s</button>
+            <button class="skip" data-sec="10"><span class="ikon">🔜</span> 10s</button>
+            <button class="skip" data-sec="20"><span class="ikon">🔜</span> 20s</button>
+            <button class="skip" data-sec="30"><span class="ikon">🔜</span> 30s</button>
+            <button id="autoplayBtn" onclick="toggleAutoplay()">🔁 Autoplay: Be</button>
+            <button id="cleanupBtn" style="display: none; background: rgba(255,100,100,0.1); border-color: rgba(255,100,100,0.3);">🗑️ Memória tisztítás</button>
+          </div> 
+          <!-- ART ablak - Rythm.js hanyjegyek -->
+          <div class="art" id="art">
+            <!--<span class="music-note rythm-high">🎶</span>-->
+            <span class="music-note rythm-high"> POFIPLAYER </span>
+            <!--<span class="music-note rythm-high">🎶</span>-->
+          </div>
+        </div>
+      </div>
+      <div class="bar">
+        <div class="progress" id="progress"></div>
+      </div>
+      <div class="time"><span id="cur">00:00</span><span id="dur">00:00</span></div>
+      <div class="vu" id="vu"></div>
+    </section>
+  </main>
+    <footer style="display: flex; justify-content: space-between; align-items: center; padding: 8px;">
+   <span id="statusBar" style="font-size: 14px; color: #00bfff; flex: 1;">
+     <span id="memStatus">🔋 --MB</span> | 
+     <span id="playStatus">⏸ Szünetel</span> | 
+     <span id="cleanupStatus">🧹 Inaktív</span>
+   </span>
+   <span style="font-size: 16px; color: rgba(46, 82, 116, 0.349); text-align: center; flex: 1;">2025 | Dajka Lajos | Verzió: 0.07-FIXED</span>
+   <span style="flex: 1;"></span> <!-- Spacer a kiegyensúlyozott elrendezéshez -->
+  </footer>
+
+  <audio id="audio" preload="auto" crossorigin="anonymous"></audio>
+  <script>
+
+    const folderList = document.getElementById('folderList');
+    const refreshBtn = document.getElementById('refresh');
+    const audio = document.getElementById('audio');
+    const playBtn = document.getElementById('play');
+    const nextBtn = document.getElementById('next');
+    const prevBtn = document.getElementById('prev');
+    const vol = document.getElementById('vol');
+    const progress = document.getElementById('progress');
+    const cur = document.getElementById('cur');
+    const dur = document.getElementById('dur');
+    const title = document.getElementById('title');
+    const folderEl = document.getElementById('folder');
+    const vu = document.getElementById('vu');
+    // Státuszsor elemek
+    const memStatus = document.getElementById('memStatus');
+    const playStatus = document.getElementById('playStatus');
+    const cleanupStatus = document.getElementById('cleanupStatus');
+    const loadingStatus = document.getElementById('loadingStatus');
+    // Státuszsor frissítése
+    function updateStatus() {
+      // Memória info
+      if (performance.memory) {
+        const memMB = Math.round(performance.memory.usedJSHeapSize / 1048576);
+        memStatus.textContent = `🔋 ${memMB}MB`;
+        
+        // Színkódolás memória alapján
+        if (memMB > 500) {
+          memStatus.style.color = '#ff4444'; // Piros ha túl sok
+        } else if (memMB > 300) {
+          memStatus.style.color = '#ffaa00'; // Narancs ha közepes
+        } else {
+          memStatus.style.color = '#00ff88'; // Zöld ha OK
+        }
+      }
+      
+      // Play/Pause státusz
+      if (!audio.paused) {
+        playStatus.textContent = '▶ Lejátszás'; playStatus.style.color = '#00ff88';
+      } else if (audio.src && audio.currentTime > 0) {
+        playStatus.textContent = '⏸ Szünetel'; playStatus.style.color = '#ffaa00';
+      } else {
+        playStatus.textContent = '◼ Megálltva'; playStatus.style.color = '#B160A3';
+      }
+    }
+    
+    // Státuszsor frissítése 1 másodpercenként
+    setInterval(updateStatus, 1000);
+    updateStatus(); // Azonnal is futtassuk
+
+
+    let lastState = JSON.parse(localStorage.getItem("lastState") || "{}");
+
+
+    let files = [],
+      current = -1,
+      ctx, analyser, srcNode;
+    let openFolders = new Set(JSON.parse(localStorage.getItem("openFolders") || "[]"));
+    let isLoading = false; // Védelem a gyors kattintások ellen
+    let loadingTimeout = null; // Timeout tárolása
+    let currentRequestId = 0; // Egyedi ID minden betöltési kéréshez
+    const BARS = 30; // VU bar-ok száma (csökkentve a jobb teljesítményért)
+    const DEBUG_MEMORY = false; // Debug mód memória monitorozáshoz
+    for (let i = 0; i < BARS; i++) {
+      const b = document.createElement('div');
+      b.className = 'vu-bar';
+      vu.appendChild(b);
+    }
+    const bars = [...document.querySelectorAll('.vu-bar')];
+
+    // Egyszerű ritmus animáció - KOMBINÁLVA a VU meter-rel egy loopban
+    const musicNotes = document.querySelectorAll('.music-note');
+    let animationFrameId = null; // Az animációs frame ID tárolása
+    const freqArray = new Uint8Array(128); // Csökkentve 256-ról (fftSize/2)
+
+    function startAnimation() {
+      if (animationFrameId) return; // Már fut
+      
+      function animate() {
+        // Csak akkor animálunk ha tényleg megy a zene
+        if (!audio.paused && analyser) {
+          analyser.getByteFrequencyData(freqArray);
+
+          // VU METER animáció (54 bar)
+          for (let i = 0; i < BARS; i++) {
+            const val = freqArray[i] || 0;
+            const sensitivity = 1.5;
+            const h = Math.max(3, Math.min(170, (val / 255) * 100 * sensitivity));
+            bars[i].style.height = h + "%";
+            // Csak akkor változtassuk a színt ha szükséges (optimalizálás)
+            if (h > 60) {
+              bars[i].style.boxShadow = `0 0 8px var(--accent5)`;
+            } else {
+              bars[i].style.boxShadow = `0 0 8px var(--accent4)`;
+            }
+          }
+
+          // HANYJEGY animáció
+          let sum = 0;
+          for (let i = 0; i < 5; i++) {
+            sum += freqArray[i] || 0;
+          }
+          const average = sum / 10;
+          const normalized = average / 255;
+          
+          // Animáció alkalmazása mind a 3 hanyjegyre
+          musicNotes.forEach((note, index) => {
+            const delay = index * 0.1;
+            const adjustedScale = 1 + ((normalized - delay) * 0.3);
+            const finalScale = Math.max(1, Math.min(1.3, adjustedScale));
+            note.style.transform = `scale(${finalScale})`;
+          });
+        }
+        animationFrameId = requestAnimationFrame(animate);
+      }
+      animate();
+    }
+
+    function stopAnimation() {
+      if (animationFrameId) {
+        cancelAnimationFrame(animationFrameId);
+        animationFrameId = null;
+      }
+      // Reset animations
+      bars.forEach(bar => {
+        bar.style.height = '3%';
+      });
+      musicNotes.forEach(note => {
+        note.style.transform = 'scale(1)';
+      });
+    }
+
+    function initAudio() {
+      if (!ctx) {
+        ctx = new AudioContext();
+        analyser = ctx.createAnalyser();
+        analyser.fftSize = 256; // Csökkentve 512-ről (kevesebb memória)
+        analyser.smoothingTimeConstant = 0.6; // Kis növelés a simább animációért
+        analyser.minDecibels = -85;
+        analyser.maxDecibels = -15;
+      }
+      
+      // FONTOS: Ne hozzunk létre újabb MediaElementSource-t ha már van!
+      // Ez memory leak-et okoz
+      if (!srcNode) {
+        try {
+          srcNode = ctx.createMediaElementSource(audio);
+          srcNode.connect(analyser);
+          analyser.connect(ctx.destination);
+          console.log('🔊 Audio elemzés inicializálva');
+        } catch (e) {
+          console.warn('⚠️ MediaElementSource már létezik:', e.message);
+        }
+      }
+    }
+
+    // Status bar frissítése
+    function updateMemoryStatus() {
+      if (performance.memory) {
+        const memMB = Math.round(performance.memory.usedJSHeapSize / 1048576);
+        memStatus.textContent = `🔋 ${memMB}MB`;
+      } else {
+        memStatus.textContent = '🔋 N/A';
+      }
+    }
+    
+    function updatePlayStatus(status) {
+      const icons = {
+        'play': '▶️ Lejátszás',
+        'pause': '⏸️ Szünetel',
+        'loading': '⏳ Betöltés',
+        'ended': '⏹️ Vége',
+        'error': '❌ Hiba'
+      };
+      playStatus.textContent = icons[status] || status;
+    }
+    
+    function updateCleanupStatus(status) {
+      cleanupStatus.textContent = status;
+    }
+    
+    // Memória frissítés 5 másodpercenként
+    setInterval(updateMemoryStatus, 5000);
+    updateMemoryStatus(); // Első frissítés azonnal
+
+
+    // Memória tisztítása
+    function cleanupMemory(aggressive = false, restorePlayback = false) {
+      const startMem = performance.memory ? Math.round(performance.memory.usedJSHeapSize / 1048576) : 0;
+
+      cleanupStatus.textContent = '🗑️ MEM törlés aktív';
+      cleanupStatus.style.color = '#6081B1';
+        
+      if (DEBUG_MEMORY) console.log(`🧹 Cleanup előtt: ${startMem}MB`);
+      
+      // Animáció leállítása
+      stopAnimation();
+      
+      // Audio buffer ürítése
+      try {
+        const wasPaused = audio.paused;
+        const currentSrc = audio.src;
+        audio.pause();
+        audio.removeAttribute('src');
+        audio.load(); // Reseteli az audio elemet és felszabadítja a buffert
+        
+        // CSAK akkor töltjük vissza ha kifejezetten kértük (manuel cleanup gomb)
+        if (restorePlayback && !wasPaused && currentSrc) {
+          setTimeout(() => {
+            audio.src = currentSrc;
+            audio.play().catch(() => {});
+          }, 100);
+        }
+      } catch (e) {
+        console.warn('Cleanup hiba:', e);
+      }
+      
+      // Agresszív mód - AudioContext újraindítása (CSAK HA NAGYON KELL!)
+      if (aggressive && ctx) {
+        console.warn('⚠️ AGRESSZÍV TISZTÍTÁS - AudioContext bezárása...');
+        try {
+          if (srcNode) {
+            srcNode.disconnect();
+            srcNode = null;
+          }
+          analyser.disconnect();
+          ctx.close();
+          ctx = null;
+          analyser = null;
+        } catch (e) {
+          console.warn('AudioContext cleanup hiba:', e);
+        }
+      }
+      
+      // Kényszerített garbage collection trigger (ha lehet)
+      if (window.gc) {
+        window.gc();
+        console.log('🗑️ Garbage collection futtatva');
+      }
+      
+      // Régi URL felszabadítása
+      if (audio.src && audio.src.startsWith('blob:')) {
+        URL.revokeObjectURL(audio.src);
+      }
+      
+      // Memória info logolása
+      setTimeout(() => {
+        if (performance.memory) {
+          const endMem = Math.round(performance.memory.usedJSHeapSize / 1048576);
+          const diff = startMem - endMem;
+          const limitMB = Math.round(performance.memory.jsHeapSizeLimit / 1048576);
+          
+          if (DEBUG_MEMORY) {
+            console.log(`📊 Cleanup után: ${endMem}MB (${diff > 0 ? '-' : '+'}${Math.abs(diff)}MB)`);
+            console.log(`📊 Limit: ${limitMB}MB`);
+          } else {
+            console.log(`📊 Használt memória: ${endMem}MB / ${limitMB}MB`);
+          }
+        }
+      }, 1000); // Várunk 1 másodpercet hogy a GC lefusson
+      
+      console.log('🧹 Memória tisztítás kész');
+    }
+    
+    // Memória monitor - 30 másodpercenként logol
+    setInterval(() => {
+      if (performance.memory) {
+        const memMB = Math.round(performance.memory.usedJSHeapSize / 1048576);
+        const limitMB = Math.round(performance.memory.jsHeapSizeLimit / 1048576);
+        console.log(`📊 Memória: ${memMB}MB / ${limitMB}MB`);
+      }
+    }, 30000);
+
+    async function loadList() {
+      const lastPlaying = files[current] ?.url||null; // 👉 elmentjük a most játszott fájlt
+      try {
+        const res = await fetch('/list');
+        if (!res.ok) throw new Error('Network response was not ok');
+        const data = await res.json();
+        renderList(data);
+        // Visszaállítás az utolsó állapotból
+        if (lastPlaying) {
+          const idx = files.findIndex(f => f.url === lastPlaying);
+          if (idx >= 0) {
+            current = idx;
+            highlight();
+            scrollToCurrent();
+          }
+        }
+      } catch (error) {
+        console.warn('⚠️ Nem sikerült frissíteni a listát:', error.message);
+        // Ne dobjunk hibát, csak logoljuk
+      }
+    }
+
+    function renderList(data) {
+      folderList.innerHTML = '';
+      files = [];
+      for (const [folder, arr] of Object.entries(data)) {
+        const li = document.createElement('li');
+        li.className = 'folder';
+        if (!openFolders.has(folder)) li.classList.add('collapsed');
+        const head = document.createElement('div');
+        head.className = 'folder-name';
+        head.innerHTML = `<span class="arrow">🔻</span> ${folder||'(gyökér)'} <span>${arr.length} fájl</span>`;
+        const ul = document.createElement('ul');
+        arr.forEach(f => {
+          const tr = document.createElement('li');
+          tr.className = 'track';
+          tr.textContent = f;
+          const url = `mp3/${folder?folder+'/':''}${f}`;
+          tr.onclick = () => playTrack(url, f, folder);
+          ul.appendChild(tr);
+          files.push({
+            url,
+            name: f,
+            folder
+          });
+        });
+        head.onclick = () => {
+          li.classList.toggle('collapsed');
+          if (li.classList.contains('collapsed')) openFolders.delete(folder);
+          else openFolders.add(folder);
+          localStorage.setItem("openFolders", JSON.stringify([...openFolders]));
+        };
+        li.appendChild(head);
+        li.appendChild(ul);
+        folderList.appendChild(li);
+      }
+    }
+
+    function playTrack(url, name, folder) {
+      // Új request ID generálása
+      const requestId = ++currentRequestId;
+      
+      console.log(`🎵 PlayTrack hívva: ${name} (requestId: ${requestId})`);
+      
+      // Ha az előző még tölt, ez az új kérés le fogja cserélni
+      if (isLoading) {
+        console.log('🔄 Új dal betöltése, előző megszakítva');
+      }
+
+      isLoading = true;
+      
+      // Memória tisztítás minden dal váltáskor - NE töltsd vissza az előző dalt!
+      cleanupMemory(false, false);
+      
+      // Töröljük az előző timeout-ot ha van
+      if (loadingTimeout) {
+        clearTimeout(loadingTimeout);
+      }
+      
+      // Biztonsági timeout - ha 5 másodperc után még mindig tölt, feloldjuk
+      loadingTimeout = setTimeout(() => {
+        if (isLoading && currentRequestId === requestId) {
+          console.warn('⚠️ Timeout - betöltés feloldva');
+          isLoading = false;
+        }
+      }, 5000);
+      
+      // Frissítsük az UI-t azonnal
+      title.textContent = name + ' ⏳';
+      folderEl.textContent = folder || '(gyökér)';
+      current = files.findIndex(x => x.url === url);
+      highlight();
+      scrollToCurrent();
+
+      // Állítsuk le az aktuális lejátszást biztonságosan
+      try {
+        audio.pause();
+      } catch (e) {
+        // Néha a pause() hibát dob, ezt ignoráljuk
+      }
+      
+      // Kis delay a clean audio state érdekében
+      setTimeout(() => {
+        // Ellenőrizzük, hogy ez még mindig az aktuális kérés-e
+        if (currentRequestId !== requestId) {
+          console.log('🔄 Újabb kérés érkezett, ez törlődik');
+          return;
+        }
+        
+        audio.currentTime = 0;
+        audio.src = url;
+        
+        // Lejátszás indítása
+        audio.play()
+          .then(() => {
+            // Ellenőrizzük újra, hogy ez még mindig az aktuális kérés-e
+            if (currentRequestId !== requestId) {
+              console.log('🔄 Újabb kérés érkezett lejátszás közben');
+              return;
+            }
+            
+            // Sikeres betöltés és lejátszás
+            clearTimeout(loadingTimeout);
+            title.textContent = name;
+            initAudio();
+            startAnimation(); // Egyetlen animációs loop indítása
+            isLoading = false;
+            console.log('✅ Betöltve:', name);
+          })
+          .catch(err => {
+            // Csak akkor kezeljük a hibát, ha ez még az aktuális kérés
+            if (currentRequestId !== requestId) {
+              return;
+            }
+            
+            // Hiba kezelése - csak akkor logoljuk, ha nem AbortError
+            clearTimeout(loadingTimeout);
+            if (err.name !== 'AbortError') {
+              console.error('❌ Hiba a lejátszás során:', err);
+              title.textContent = name + ' ❌ Hiba';
+            }
+            isLoading = false;
+            stopAnimation(); // Animáció leállítása hiba esetén
+          });
+      }, 50); // 50ms delay
+    }
+
+    function highlight() {
+      // minden korábbi kijelölés törlése
+      document.querySelectorAll('.track.playing').forEach(x => x.classList.remove('playing'));
+      const currentFile = files[current];
+      if (!currentFile) return;
+      // megkeressük az aktuális fájlhoz tartozó <li> elemet
+      const el = [...document.querySelectorAll('.track')]
+        .find(x => x.textContent.trim() === currentFile.name.trim());
+      if (el) el.classList.add('playing');
+    }
+
+    function scrollToCurrent() {
+      const currentEl = document.querySelector('.track.playing');
+      if (!currentEl) return;
+      const container = document.getElementById('folderList');
+      const top = currentEl.offsetTop - container.offsetTop - container.clientHeight / 2;
+      container.scrollTo({
+        top,
+        behavior: 'smooth'
+      });
+    }
+
+    // Vezérlők
+    playBtn.onclick = () => {
+      if (audio.paused) {
+        audio.play();
+        playBtn.textContent = '⏸';
+        startAnimation();
+      } else {
+        audio.pause();
+        playBtn.textContent = '➤';
+        stopAnimation();
+      }
+    };
+    nextBtn.onclick = () => {
+      if (files.length) {
+        current = (current + 1) % files.length;
+        playTrack(files[current].url, files[current].name, files[current].folder);
+      }
+    };
+    prevBtn.onclick = () => {
+      if (files.length) {
+        current = (current - 1 + files.length) % files.length;
+        playTrack(files[current].url, files[current].name, files[current].folder);
+      }
+    };
+    vol.oninput = () => audio.volume = vol.value;
+
+    audio.addEventListener('timeupdate', () => {
+      if (!audio.duration) return;
+      progress.style.width = (audio.currentTime / audio.duration * 100) + '%';
+      cur.textContent = format(audio.currentTime);
+      dur.textContent = format(audio.duration);
+      saveState();
+    });
+
+    // ================================
+    // 🔁 AUTOPLAY (folyamatos lejátszás)
+    // ================================
+    let autoplay = true;
+
+    function toggleAutoplay() {
+      autoplay = !autoplay;
+      const btn = document.getElementById('autoplayBtn');
+      if (autoplay) {
+        btn.textContent = "🟢 Autoplay";
+        btn.classList.add("active");
+      } else {
+        btn.textContent = "🔴 Autoplay";
+        btn.classList.remove("active");
+      }
+    }
+
+    toggleAutoplay(); // alapértelmezés: BE
+
+    // Manuel memória tisztítás gomb
+    let cleanupBtn = document.getElementById('cleanupBtn');
+    //console.log('🔍 CleanupBtn elem:', cleanupBtn ? 'Megtalálva ✅' : 'NEM található ❌');
+    
+    if (!cleanupBtn) {
+      console.warn('⚠️ FIGYELEM: Memória tisztítás gomb nem található a HTML-ben!');
+      console.log('🔧 Automatikus létrehozás folyamatban...');
+      
+      // Dinamikusan létrehozzuk a gombot
+      cleanupBtn = document.createElement('button');
+      cleanupBtn.id = 'cleanupBtn';
+      cleanupBtn.textContent = '🗑️ Memória tisztítás';
+      cleanupBtn.style.background = 'rgba(255,100,100,0.1)';
+      cleanupBtn.style.borderColor = 'rgba(255,100,100,0.3)';
+      cleanupBtn.style.border = '1px solid';
+      cleanupBtn.style.color = 'var(--accent)';
+      cleanupBtn.style.padding = '6px 10px';
+      cleanupBtn.style.borderRadius = '8px';
+      cleanupBtn.style.fontSize = '14px';
+      cleanupBtn.style.cursor = 'pointer';
+      cleanupBtn.style.transition = 'all 0.25s';
+      cleanupBtn.style.boxShadow = '0 0 5px rgba(0, 255, 255, 0.2)';
+      
+      // Hozzáadjuk a controls div-hez
+      const controls = document.querySelector('.controls');
+      if (controls) {
+        controls.appendChild(cleanupBtn);
+        console.log('✅ Gomb dinamikusan létrehozva és hozzáadva!');
+      } else {
+        console.error('❌ Controls div sem található! Teljes HTML frissítés szükséges.');
+      }
+    }
+    
+    if (cleanupBtn) {
+      let lastCleanupClick = 0;
+      cleanupBtn.onclick = () => {
+        const now = Date.now();
+        const isDoubleClick = (now - lastCleanupClick) < 1000;
+        lastCleanupClick = now;
+        
+        if (isDoubleClick) {
+          console.log('🗑️🗑️ AGRESSZÍV memória tisztítás indítva...');
+          cleanupMemory(true, true); // aggressive + restore playback
+          cleanupBtn.textContent = '⚠️ Agresszív tisztítás kész!';
+        } else {
+          console.log('🗑️ Manuel memória tisztítás indítva...');
+          cleanupMemory(false, true); // nem aggressive + restore playback
+          cleanupBtn.textContent = '✅ Kész! (dupla katt = agresszív)';
+        }
+        
+        setTimeout(() => {
+          cleanupBtn.textContent = '🗑️ Memória tisztítás';
+        }, 3000);
+      };
+      console.log('✅ Memória tisztítás gomb eseménykezelő beállítva');
+    } else {
+      console.error('❌ HIBA: Memória tisztítás gomb nem hozható létre!');
+      console.warn('   → TELJES oldal frissítés szükséges: Ctrl+Shift+R');
+      console.warn('   → Vagy cseréld ki manuálisan az index.html fájlt a szerveren!');
+    }
+
+    audio.addEventListener('ended', () => {
+      if (!autoplay) {
+        console.log("🎵 Lejátszás vége – autoplay kikapcsolva.");
+        stopAnimation();
+        return;
+      }
+      if (files.length === 0) return;
+      current++;
+      if (current >= files.length) {
+        console.log("🎵 Lista vége – autoplay leállt.");
+        stopAnimation();
+        return;
+      }
+      const next = files[current];
+      playTrack(next.url, next.name, next.folder);
+    });
+
+    // Hiba kezelése - ha nem tölthető be a fájl
+    audio.addEventListener('error', () => {
+      console.error('❌ Audio betöltési hiba');
+      if (loadingTimeout) clearTimeout(loadingTimeout);
+      isLoading = false;
+      stopAnimation();
+      title.textContent = (files[current]?.name || 'Ismeretlen') + ' ❌ Betöltési hiba';
+    });
+
+    document.querySelectorAll(".skip").forEach(b => b.onclick = () => {
+      const s = parseFloat(b.dataset.sec);
+      audio.currentTime = Math.max(0, Math.min(audio.duration - 0.1, Math.max(0, audio.currentTime + s  ))); 
+    });
+
+    function format(t) {
+      if (!t) return "00:00";
+      const m = Math.floor(t / 60),
+        s = Math.floor(t % 60);
+      return `${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
+    }
+
+    function saveState() {
+      localStorage.setItem("lastState", JSON.stringify({
+        url: files[current] ?.url||null,
+        time: audio.currentTime,
+        paused: audio.paused
+      }));
+    }
+
+    refreshBtn.onclick = () => loadList();
+    loadList();
+    setInterval(loadList, 30000);
+    
+    // Periodikus memória tisztítás - 3 percenként
+    setInterval(() => {
+      if (audio.paused) {
+        console.log('🗑️ Periodikus memória tisztítás...');
+        cleanupMemory(false, false); // Nem aggressive, nem restore
+      }
+    }, 180000); // 3 perc
+  </script>
+</body>
+
+</html>

@@ -5,6 +5,12 @@ Egy retro-neon dizájnú, böngészőben futó MP3 lejátszó, mappa-alapú navi
 ![verzió](https://img.shields.io/badge/verzi%C3%B3-0.07--FIXED-00bfff)
 ![licenc](https://img.shields.io/badge/licenc-saját%20haszn%C3%A1latra-lightgrey)
 
+
+<img width="1898" height="908" alt="sagplayer" src="https://github.com/user-attachments/assets/c0e1da97-4f2a-4dda-be3c-1a883b2d857f" />
+
+
+
+
 ## ✨ Funkciók
 
 - **Mappa-alapú böngészés** – az `mp3/` könyvtár almappái szerint csoportosított, lenyíló listás fájlböngésző

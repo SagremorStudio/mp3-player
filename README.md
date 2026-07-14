@@ -119,11 +119,10 @@ A színpaletta a `:root` CSS változóiban módosítható:
 }
 ```
 
-## 📄 Licenc
-
-Saját / belső használatra készült projekt.
+📜 Licenc
+MIT License — szabadon felhasználható, módosítható, terjeszthető, oktatási és személyes célokra.
 
 ---
 
-*2025 | Dajka Lajos | Verzió: 0.07-FIXED*
+*2025 | Verzió: 0.07-FIXED*
 

@@ -2,6 +2,9 @@
 
 Egy retro-neon dizájnú, böngészőben futó MP3 lejátszó, mappa-alapú navigációval, spektrum-vizualizációval és Python háttérszerverrel.
 
+<img width="625" height="465" alt="folderbeat" src="https://github.com/user-attachments/assets/ee988765-3f40-419f-9f87-738263c1cdd5" />
+
+
 ![verzió](https://img.shields.io/badge/verzi%C3%B3-0.07--FIXED-00bfff)
 ![licenc](https://img.shields.io/badge/licenc-saját%20haszn%C3%A1latra-lightgrey)
 

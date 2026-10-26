@@ -119,9 +119,6 @@ A színpaletta a `:root` CSS változóiban módosítható:
 }
 ```
 
-📜 Licenc
-MIT License — szabadon felhasználható, módosítható, terjeszthető, oktatási és személyes célokra.
-
 ---
 
 *2025 | Verzió: 0.07-FIXED*
